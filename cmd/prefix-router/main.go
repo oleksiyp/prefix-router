@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/oleksiyp/multi-dc-final/prefix-router/pkg/logger"
-	"github.com/oleksiyp/multi-dc-final/prefix-router/pkg/signals"
+	"github.com/oleksiyp/prefix-router/pkg/logger"
+	"github.com/oleksiyp/prefix-router/pkg/signals"
 	"go.uber.org/zap"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
