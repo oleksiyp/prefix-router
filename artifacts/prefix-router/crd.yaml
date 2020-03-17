@@ -1,11 +1,11 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: routes.prefix-router.app
+  name: routes.prefixrouter.app
   annotations:
     helm.sh/resource-policy: keep
 spec:
-  group: prefix-router.app
+  group: prefixrouter.app
   version: v1beta1
   versions:
     - name: v1beta1
