@@ -1,4 +1,4 @@
 // +k8s:deepcopy-gen=package
-// +groupName=prefix-router.app
+// +groupName=prefixrouter.app
 
 package v1

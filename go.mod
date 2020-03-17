@@ -1,4 +1,4 @@
-module github.com/oleksiyp/prefix-router
+module github.com/oleksiyp/prefixrouter
 
 go 1.14
 

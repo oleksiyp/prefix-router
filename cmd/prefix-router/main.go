@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/oleksiyp/prefix-router/pkg/logger"
-	"github.com/oleksiyp/prefix-router/pkg/signals"
+	"github.com/oleksiyp/prefixrouter/pkg/logger"
+	"github.com/oleksiyp/prefixrouter/pkg/signals"
 	"go.uber.org/zap"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -36,7 +36,7 @@ func main() {
 
 	stopCh := signals.SetupSignalHandler()
 
-	logger.Infof("Starting prefix-router")
+	logger.Infof("Starting prefixrouter")
 
 	cfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
 	if err != nil {
@@ -52,8 +52,6 @@ func main() {
 	if err != nil {
 		logger.Fatalf("Error building consul client: %v", err)
 	}
-
-
 
 }
 

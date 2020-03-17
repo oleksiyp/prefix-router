@@ -5,7 +5,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/oleksiyp/prefix-router/pkg/apis/prefix-router"
+	"github.com/oleksiyp/prefixrouter/pkg/apis/prefixrouter"
 )
 
 // GroupVersion is the identifier for the API which includes
