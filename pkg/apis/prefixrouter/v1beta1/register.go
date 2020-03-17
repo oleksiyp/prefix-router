@@ -1,4 +1,4 @@
-package v1
+package v1beta1
 
 import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,7 +11,7 @@ import (
 // GroupVersion is the identifier for the API which includes
 // the name of the group and the version of the API
 var SchemeGroupVersion = schema.GroupVersion{
-	Group:   prefix_router.GroupName,
+	Group:   prefixrouter.GroupName,
 	Version: "v1",
 }
 
