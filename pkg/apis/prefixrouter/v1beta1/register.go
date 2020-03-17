@@ -28,8 +28,8 @@ func Resource(resource string) schema.GroupResource {
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(
 		SchemeGroupVersion,
-		&MyResource{},
-		&MyResourceList{},
+		&Route{},
+		&Route{},
 	)
 
 	// register the type in the scheme
