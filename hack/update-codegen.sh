@@ -15,5 +15,5 @@ chmod +x $CODEGEN_PKG/generate-groups.sh
 $CODEGEN_PKG/generate-groups.sh all \
   "$ROOT_PACKAGE/pkg/client" \
   "$ROOT_PACKAGE/pkg/apis" \
-  "prefixrouter.app:v1beta1" \
+  "prefixrouter:v1beta1" \
   --go-header-file hack/boilerplate.go.txt
