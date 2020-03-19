@@ -7,16 +7,10 @@ metadata:
 spec:
   group: prefixrouter.app
   version: v1beta1
-  versions:
-    - name: v1beta1
-      served: true
-      storage: true
   names:
     plural: routes
     singular: route
     kind: Route
-    categories:
-      - all
   scope: Namespaced
   subresources:
     status: {}
