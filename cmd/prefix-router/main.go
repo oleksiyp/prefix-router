@@ -10,6 +10,7 @@ import (
 	"github.com/oleksiyp/prefixrouter/pkg/client/informers/externalversions/prefixrouter/v1beta1"
 	"github.com/oleksiyp/prefixrouter/pkg/logger"
 	"github.com/oleksiyp/prefixrouter/pkg/signals"
+	"github.com/oleksiyp/prefixrouter/server"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -26,6 +27,8 @@ var (
 	logLevel    string
 	zapEncoding string
 	namespace   string
+	serviceName string
+	port        string
 )
 
 func init() {
@@ -33,7 +36,9 @@ func init() {
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 	flag.StringVar(&logLevel, "log-level", "debug", "Log level can be: debug, info, warning, error.")
 	flag.StringVar(&zapEncoding, "zap-encoding", "json", "Zap logger encoding.")
-	flag.StringVar(&namespace, "namespace", "", "Namespace that flagger would watch canary object.")
+	flag.StringVar(&namespace, "namespace", "", "Namespace that prefix router would watch route object.")
+	flag.StringVar(&serviceName, "serviceName", "", "Service name that prefix router will configure.")
+	flag.StringVar(&port, "port", "8080", "Port to listen on.")
 }
 
 func main() {
@@ -48,7 +53,11 @@ func main() {
 
 	stopCh := signals.SetupSignalHandler()
 
-	logger.Infof("Starting prefixrouter")
+	logger.Infof("Starting prefix router")
+
+	if serviceName == "" {
+		logger.Fatalf("Missing --serviceName parameter")
+	}
 
 	cfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
 	if err != nil {
@@ -76,7 +85,10 @@ func main() {
 
 	routeInformer := startInformers(prefixRouterClient, logger, stopCh)
 
+	go server.ListenAndServe(port, 3*time.Second, logger, stopCh)
+
 	c := controller.NewController(
+		serviceName,
 		kubeClient,
 		prefixRouterClient,
 		consulClient,
