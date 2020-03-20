@@ -1,0 +1,7 @@
+apiVersion: prefixrouter.app/v1beta1
+kind: Route
+metadata:
+  name: service1-route
+spec:
+  prefix: /abc
+  service: service1

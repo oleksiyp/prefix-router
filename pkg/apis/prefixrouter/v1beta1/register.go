@@ -12,24 +12,27 @@ import (
 // the name of the group and the version of the API
 var SchemeGroupVersion = schema.GroupVersion{
 	Group:   prefixrouter.GroupName,
-	Version: "v1",
+	Version: "v1beta1",
 }
 
 // create a SchemeBuilder which uses functions to add types to
 // the scheme
-var AddToScheme = runtime.NewSchemeBuilder(addKnownTypes).AddToScheme
+var (
+	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
+	AddToScheme   = SchemeBuilder.AddToScheme
+)
 
 func Resource(resource string) schema.GroupResource {
 	return SchemeGroupVersion.WithResource(resource).GroupResource()
 }
 
 // addKnownTypes adds our types to the API scheme by registering
-// MyResource and MyResourceList
+// Route and RouteList
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(
 		SchemeGroupVersion,
 		&Route{},
-		&Route{},
+		&RouteList{},
 	)
 
 	// register the type in the scheme

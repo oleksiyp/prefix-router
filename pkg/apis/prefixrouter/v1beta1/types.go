@@ -18,8 +18,8 @@ type Route struct {
 
 // RouteSpec is the spec for a Route resource
 type RouteSpec struct {
-	Prefix  string `json:"deploymentName"`
-	Service string `json:"replicas"`
+	Prefix  string `json:"prefix"`
+	Service string `json:"service"`
 }
 
 // RouteStatus is the status for a Route resource

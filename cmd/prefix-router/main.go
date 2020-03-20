@@ -2,14 +2,22 @@ package main
 
 import (
 	"flag"
+	semver "github.com/Masterminds/semver/v3"
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/oleksiyp/prefixrouter/controller"
+	clientset "github.com/oleksiyp/prefixrouter/pkg/client/clientset/versioned"
+	"github.com/oleksiyp/prefixrouter/pkg/client/informers/externalversions"
+	"github.com/oleksiyp/prefixrouter/pkg/client/informers/externalversions/prefixrouter/v1beta1"
 	"github.com/oleksiyp/prefixrouter/pkg/logger"
 	"github.com/oleksiyp/prefixrouter/pkg/signals"
 	"go.uber.org/zap"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/code-generator/cmd/client-gen/generators"
 	"log"
+	"time"
 )
 
 var (
@@ -17,6 +25,7 @@ var (
 	kubeconfig  string
 	logLevel    string
 	zapEncoding string
+	namespace   string
 )
 
 func init() {
@@ -24,9 +33,12 @@ func init() {
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 	flag.StringVar(&logLevel, "log-level", "debug", "Log level can be: debug, info, warning, error.")
 	flag.StringVar(&zapEncoding, "zap-encoding", "json", "Zap logger encoding.")
+	flag.StringVar(&namespace, "namespace", "", "Namespace that flagger would watch canary object.")
 }
 
 func main() {
+	flag.Parse()
+
 	logger, err := logger.NewLoggerWithEncoding(logLevel, zapEncoding)
 	if err != nil {
 		log.Fatalf("Error creating logger: %v", err)
@@ -48,27 +60,56 @@ func main() {
 		logger.Fatalf("Error building kubernetes clientset: %v", err)
 	}
 
+	prefixRouterClient, err := clientset.NewForConfig(cfg)
+	if err != nil {
+		logger.Fatalf("Error building prefix router clientset: %v", err)
+	}
+
 	consulClient, err := consulapi.NewClient(consulapi.DefaultConfig())
 	if err != nil {
 		logger.Fatalf("Error building consul client: %v", err)
 	}
 
+	verifyCRDs(prefixRouterClient, logger)
+	verifyKubernetesVersion(kubeClient, logger)
+	verifyConsulClient(*consulClient, logger)
+
+	routeInformer := startInformers(prefixRouterClient, logger, stopCh)
+
+	c := controller.NewController(
+		kubeClient,
+		prefixRouterClient,
+		consulClient,
+		routeInformer,
+		logger,
+	)
+
+	if err := c.Run(stopCh); err != nil {
+		logger.Fatalf("Error running controller: %v", err)
+	}
 }
 
-func verifyCRDs(flaggerClient clientset.Interface, logger *zap.SugaredLogger) {
-	_, err := flaggerClient.FlaggerV1beta1().Canaries(namespace).List(metav1.ListOptions{Limit: 1})
-	if err != nil {
-		logger.Fatalf("Canary CRD is not registered %v", err)
+func startInformers(
+	client *clientset.Clientset,
+	logger *zap.SugaredLogger,
+	stopCh <-chan struct{},
+) v1beta1.RouteInformer {
+	informerFactory := externalversions.NewSharedInformerFactoryWithOptions(client, time.Second*30, externalversions.WithNamespace(namespace))
+
+	logger.Info("Waiting for route informer cache to sync")
+	routeInformer := informerFactory.Prefixrouter().V1beta1().Routes()
+	go routeInformer.Informer().Run(stopCh)
+	if ok := cache.WaitForNamedCacheSync("prefixrouter", stopCh, routeInformer.Informer().HasSynced); !ok {
+		logger.Fatalf("failed to wait for cache to sync")
 	}
 
-	_, err = flaggerClient.FlaggerV1beta1().MetricTemplates(namespace).List(metav1.ListOptions{Limit: 1})
-	if err != nil {
-		logger.Fatalf("MetricTemplate CRD is not registered %v", err)
-	}
+	return routeInformer
+}
 
-	_, err = flaggerClient.FlaggerV1beta1().AlertProviders(namespace).List(metav1.ListOptions{Limit: 1})
+func verifyCRDs(client clientset.Interface, logger *zap.SugaredLogger) {
+	_, err := client.PrefixrouterV1beta1().Routes(namespace).List(metav1.ListOptions{Limit: 1})
 	if err != nil {
-		logger.Fatalf("AlertProvider CRD is not registered %v", err)
+		logger.Fatalf("Route CRD is not registered %v", err)
 	}
 }
 
@@ -99,4 +140,13 @@ func verifyKubernetesVersion(kubeClient kubernetes.Interface, logger *zap.Sugare
 	}
 
 	logger.Infof("Connected to Kubernetes API %s", ver)
+}
+
+func verifyConsulClient(client consulapi.Client, logger *zap.SugaredLogger) {
+	name, err := client.Agent().NodeName()
+	if err != nil {
+		logger.Fatalf("Consul not reachable %v", err)
+	}
+
+	logger.Infof("Connected to Consul API, agent node = %s", name)
 }
