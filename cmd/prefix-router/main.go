@@ -49,6 +49,8 @@ func main() {
 		log.Fatalf("Error creating logger: %v", err)
 	}
 
+	zap.ReplaceGlobals(logger.Desugar())
+
 	defer logger.Sync()
 
 	stopCh := signals.SetupSignalHandler()
