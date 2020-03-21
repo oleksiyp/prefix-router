@@ -2,8 +2,8 @@ TAG?=latest
 
 build:
 	CGO_ENABLED=0 GOOS=linux go build  \
-		-ldflags "-s -w \
-		-a -installsuffix cgo -o ./bin/prefixrouter ./cmd/prefixrouter/*
+		-ldflags "-s -w" \
+		-a -installsuffix cgo -o ./bin/prefixrouter ./cmd/prefix-router/*
 	docker build -t oleksiyp/prefixrouter:$(TAG) . -f Dockerfile
 
 fmt:
