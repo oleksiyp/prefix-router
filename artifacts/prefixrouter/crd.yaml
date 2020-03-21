@@ -1,26 +1,28 @@
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: routes.prefixrouter.app
 spec:
   group: prefixrouter.app
-  version: v1beta1
   names:
     plural: routes
     singular: route
     kind: Route
   scope: Namespaced
-  validation:
-    openAPIV3Schema:
-      properties:
-        spec:
-          required:
-            - prefix
-            - service
+  versions:
+    - name: v1beta1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
           properties:
-            prefix:
-              description: HTTP prefix
-              type: string
-            service:
-              description: Service to forward traffic
-              type: string
+            spec:
+              type: object
+              properties:
+                prefix:
+                  description: HTTP prefix
+                  type: string
+                service:
+                  description: Service to forward traffic
+                  type: string
